@@ -25,14 +25,15 @@
     <div id="container">
     </div>
     <script type="module">
-          import init, { State } from "./pkg/minesweeper_wasm.js";
+          import init, { Game } from "./pkg/minesweeper_wasm.js";
       init().then (() => {reset();});
 
       const StateIcon = ['🌞', '🚩', '❓']
       document.getElementById("resetBtn").onclick = reset;
-
+      let flags = 0;
+      let winFlags = 0;
       function reset() {
-        const state = new State();
+        const game = new Game();
         const container = document.getElementById("container");
         container.innerHTML = '';
         for (let i = 0; i < 10; i++) {
@@ -47,10 +48,11 @@
             button.textContent = "🌞"
 
             button.onclick = function()  {
-              const k = state.update(i,j);
+              const k = game.update(i,j);
               button.disabled = true;
               if (k < 0) {
                 button.textContent = "💥";
+                alert("Game over");
               }
               else if (k == 0)
               {
@@ -70,8 +72,17 @@
             }
             button.oncontextmenu = () => {
               const state = (Number(button.getAttribute("state")) + 1) % 3;
+
               button.setAttribute("state",  state);
-              button.textContent  = StateIcon[state]
+              button.textContent  = StateIcon[state];
+              if (state == 1) {
+                flags++;
+                if (flags == game.mine_count) {
+                  alert("Win 😎")
+                }
+              } else if (state == 2) {
+                flags--;
+              }
               return false;
             }
             line.appendChild(button);

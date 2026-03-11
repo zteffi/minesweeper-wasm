@@ -4,15 +4,21 @@ use getrandom::fill;
 const SIZE:usize = 10;
 
 #[wasm_bindgen]
-struct State {
-    minefield: [[ i32; SIZE]; SIZE]
+struct Game {
+    minefield: [[ i32; SIZE]; SIZE],
+    mine_count:i32
 }
 
 #[wasm_bindgen]
-impl State {
+impl Game {
     #[wasm_bindgen(constructor)]
-     pub fn new() -> State {
-        State{ minefield: [[0; SIZE]; SIZE]}
+    pub fn new() -> Game {
+        Game{ minefield: [[0; SIZE]; SIZE], mine_count: 0}
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn mine_count(&self) -> i32 {
+        self.mine_count
     }
 
     fn empty(&self) -> bool
@@ -32,11 +38,13 @@ impl State {
         self.minefield[x as usize][y as usize] > 0
     }
 
-    fn setup(&mut self, x: i32, y: i32) -> i32 {
+    fn setup(&mut self, x: i32, y: i32) {
+        const BOMBS_PLANTED:usize = 18;
+        // count < BOMBS_PLANTED if bomb already exists at location
         let mut count = 0;
-        let mut buf: [u8; 30] = [0u8; 15*2];
+        let mut buf= [0u8; BOMBS_PLANTED*2];
         let _ = getrandom::fill(&mut buf);
-        for i in 0usize..15 {
+        for i in 0usize..BOMBS_PLANTED {
             let nx = buf[2*i]  as usize % SIZE;
             let ny = buf[2*i + 1]  as usize  % SIZE;
             if nx == x as usize && ny == y as usize{
@@ -48,7 +56,7 @@ impl State {
             }
 
         }
-        count
+        self.mine_count = count;
     }
 
     #[wasm_bindgen]
@@ -72,21 +80,9 @@ impl State {
                         }
                     }
                 }
-            // clicked(x,y,k);
             return k;
         }
     }
 
 }
-
-
-#[wasm_bindgen]
-extern "C" {
-    // pub fn clicked(x:i32, y:i32, text:&str);
-
-}
-
-
-
-
 
